@@ -28,14 +28,15 @@ The project includes:
 wealth_of_nations_project/
 │
 ├── src/
-│ ├── wealth_of_nations_analysis.py # Fetches and merges data from World Bank API
-│ └── wealth_dashboard.py # Interactive Streamlit dashboard
+│   ├── wealth_of_nations_analysis.py
+│   └── wealth_dashboard.py
 │
 ├── output/
-│ └── final_dataset.csv # Cleaned and merged dataset (auto-generated)
+│   └── final_dataset.csv
 │
-├── requirements.txt # Required libraries
-└── README.md # Project documentation
+├── requirements.txt
+├── README.md
+└── LICENSE
 
 ## 🚀 How to Run the Project
 
