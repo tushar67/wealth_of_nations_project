@@ -1,5 +1,7 @@
 # 🌍 The Wealth of Nations — Global Prosperity Dashboard
 
+![Dashboard Preview](dashboard_preview.png)
+
 ## 🎯 Overview
 This project analyzes the relationship between a country's **economic prosperity** and the **well-being of its population**, using official **World Bank data**.  
 It explores how **GDP per capita**, **life expectancy**, **healthcare spending**, and **child mortality** have evolved globally.
@@ -87,9 +89,9 @@ The gap between developed and developing countries is narrowing over time.
 
 🧑‍💻 Author
 
-Tushar Sinha
-Master’s in Data Science — University of Milan
-📧 tushar.sinha@studenti.unimi.it
+Tushar Randhir Sinha
+Master’s in Data Science for Economics and Health — University of Milan
+📧 tusharrandhir.sinha@studenti.unimi.it
 
 Data Source: World Bank Open Data
 
