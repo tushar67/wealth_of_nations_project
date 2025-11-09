@@ -51,17 +51,28 @@ st.plotly_chart(fig_map, use_container_width=True)
 # GDP vs LIFE EXPECTANCY
 # --------------------------------------
 st.subheader("💡 GDP vs Life Expectancy")
-fig_scatter = px.scatter(
-    filtered,
-    x="GDP_per_capita",
-    y="Life_Expectancy",
-    color="Country",
-    size="Health_Exp_per_Capita",
-    hover_name="Country",
-    size_max=20,
-    title="Health and Prosperity",
-)
-st.plotly_chart(fig_scatter, use_container_width=True)
+# 🟢 Scatter Plot — GDP vs Life Expectancy
+st.subheader("💬 GDP vs Life Expectancy")
+
+# Drop rows with NaN in key columns before plotting
+scatter_df = filtered.dropna(subset=["GDP_per_capita", "Life_Expectancy", "Health_Exp_per_Capita"])
+
+# If there’s no valid data, show a Streamlit warning
+if scatter_df.empty:
+    st.warning("⚠️ No data available for the selected filters.")
+else:
+    fig_scatter = px.scatter(
+        scatter_df,
+        x="GDP_per_capita",
+        y="Life_Expectancy",
+        color="Country",
+        size="Health_Exp_per_Capita",
+        hover_name="Country",
+        size_max=20,
+        title="Health and Prosperity (Bubble size = Health Expenditure)",
+    )
+    st.plotly_chart(fig_scatter, use_container_width=True)
+
 
 # --------------------------------------
 # TREND OVER TIME
@@ -96,3 +107,17 @@ fig_heat = ff.create_annotated_heatmap(
 st.plotly_chart(fig_heat, use_container_width=True)
 
 st.markdown("💬 *Data Source: World Bank Open Data (2010–2020)*")
+
+
+# 🧠 Summary Metrics
+st.subheader("📋 Summary Statistics")
+
+col1, col2, col3 = st.columns(3)
+col1.metric("💰 Average GDP per Capita", f"${filtered['GDP_per_capita'].mean():,.0f}")
+col2.metric("❤️ Avg Life Expectancy", f"{filtered['Life_Expectancy'].mean():.1f} years")
+col3.metric("👶 Avg Child Mortality", f"{filtered['Child_Mortality'].mean():.1f}")
+
+st.markdown("---")
+st.markdown("🌍 **Data Source:** World Bank Open Data | Built with ❤️ by Tushar Randhir Sinha")
+
+
