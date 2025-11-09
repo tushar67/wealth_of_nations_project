@@ -54,9 +54,7 @@ python wealth_of_nations_analysis.py
 
 
 This script fetches and merges data from the World Bank API
-and saves the cleaned dataset to:
-
-output/final_dataset.csv
+and saves the cleaned dataset to: output/final_dataset.csv
 
 4️⃣ Launch the dashboard
 streamlit run src/wealth_dashboard.py
