@@ -4,3 +4,8 @@ plotly
 streamlit
 wbdata
 requests
+scipy
+statsmodels
+statsmodels
+sklearn
+scikit-learn
