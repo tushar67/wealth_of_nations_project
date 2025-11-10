@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+venv/
+output/final_dataset.csv
+.DS_Store
+
