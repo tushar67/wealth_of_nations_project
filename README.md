@@ -4,6 +4,7 @@
 
 A professional, multi-page Streamlit analytics application built using World Bank data (2010–2020).
 This platform brings together interactive dashboards, AI-powered insights, machine learning forecasting, and PDF report generation — all in one seamless experience.
+
 <img width="1410" height="674" alt="dashboard_preview" src="https://github.com/user-attachments/assets/f9c5df7d-23a4-4a6a-8505-1f619d544da0" />
 
 <p align="center"> <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python"> <img src="https://img.shields.io/badge/Streamlit-App-red?logo=streamlit"> <img src="https://img.shields.io/badge/Plotly-Interactive%20Charts-00c7ff?logo=plotly"> <img src="https://img.shields.io/badge/ML-Forecasting-green?logo=scikitlearn"> </p>
