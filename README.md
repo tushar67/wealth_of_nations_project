@@ -5,51 +5,35 @@ This platform brings together interactive dashboards, AI-powered insights, machi
 
 <p align="center"> <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python"> <img src="https://img.shields.io/badge/Streamlit-App-red?logo=streamlit"> <img src="https://img.shields.io/badge/Plotly-Interactive%20Charts-00c7ff?logo=plotly"> <img src="https://img.shields.io/badge/ML-Forecasting-green?logo=scikitlearn"> </p>
 📌 Features Overview
-🟦 1. Global Dashboard
+
+1. Global Dashboard
 
 The main page that visualizes worldwide prosperity trends.
+Choropleth world map
+GDP vs Life Expectancy bubble chart
+Country trends (2010–2020)
+Correlation heatmap
+Summary metrics
+PDF Report Generator (with charts embedded)
 
-🌐 Choropleth world map
-
-📊 GDP vs Life Expectancy bubble chart
-
-⏳ Country trends (2010–2020)
-
-🔥 Correlation heatmap
-
-📋 Summary metrics
-
-📝 PDF Report Generator (with charts embedded)
-
-🟩 2. Global Correlations
+3. Global Correlations
 
 Analyze relationships between economics & health indicators.
+Pearson Correlation
+2D scatter with OLS regression
+AI-generated correlation insights
+Text-to-speech summary (gTTS)
+Clean continent mapping (7-continent system)
 
-📉 Pearson Correlation
-
-🟢 2D scatter with OLS regression
-
-🤖 AI-generated correlation insights
-
-🔊 Text-to-speech summary (gTTS)
-
-🧮 Clean continent mapping (7-continent system)
-
-🟧 3. Global Trends Forecasting
+3. Global Trends Forecasting
 
 Forecast future prosperity trends up to 2035 using Machine Learning.
-
-📈 Linear Regression
-
-📈 Polynomial Regression (Degree 2)
-
-🔮 Forecast graphs
-
-📄 PDF Forecast Report (with graph included)
-
-📅 Forecast Data Table
-
-🧠 Forecast insights (direction + % change)
+Linear Regression
+Polynomial Regression (Degree 2)
+Forecast graphs
+PDF Forecast Report (with graph included)
+Forecast Data Table
+Forecast insights (direction + % change)
 
 ⚙️ Tech Stack
 Category	Tools
@@ -60,6 +44,7 @@ Charts	Plotly (PNG export via kaleido)
 Audio	gTTS (Google Text-to-Speech)
 PDF Reports	FPDF
 Country to Continent Mapping	country_converter
+
 📦 Project Structure
 wealth_of_nations_project/
 │
@@ -85,6 +70,7 @@ wealth_of_nations_project/
 └── README.md
 
 🚀 Setup & Installation
+
 1️⃣ Clone the repo
 git clone https://github.com/yourusername/wealth_of_nations_project.git
 cd wealth_of_nations_project
@@ -102,11 +88,9 @@ Launch the Streamlit dashboard:
 
 streamlit run src/pages/0_Global_Dashboard.py
 
-
 Now open your browser at:
 
 http://localhost:8501
-
 
 Use the sidebar navigation to explore all pages.
 
@@ -115,36 +99,22 @@ Use the sidebar navigation to explore all pages.
 Two pages offer downloadable PDF reports:
 
 ✔ Global Dashboard
-
 Summary metrics
-
 Choropleth map
-
 Bubble chart
-
 Trend graph
-
 All graphs embedded as PNG via kaleido
 
 ✔ Forecasting Page
-
 Forecast summary
-
-% change analysis
-
+Percentage change analysis
 Forecast graph embedded
-
 Trend reporting
-
 Reports use FPDF, ensuring:
-
 Lightweight PDFs
-
 No Unicode dependency
-
 Works on local + Streamlit Cloud
-
-🤖 Machine Learning Forecasting
+Machine Learning Forecasting
 
 The app supports:
 
@@ -156,14 +126,9 @@ Best for stable, linear growth patterns.
 
 Captures acceleration or deceleration trends.
 
-Output includes:
-
-Forecasted values
-
+Output includes: Forecasted values
 Confidence-style separation (Actual vs Forecast color-coded)
-
 Insights on upward/downward trends
-
 Forecast data table
 
 🧪 requirements.txt
