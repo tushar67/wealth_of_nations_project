@@ -147,6 +147,6 @@ st.plotly_chart(fig_anim, use_container_width=True)
 # ---------------------------------------------------------
 st.markdown("---")
 st.markdown(
-    "<p style='text-align:center;'>🌍 Developed by <b>Tushar Sinha</b> | University of Milan 🇮🇹</p>",
+    "<p style='text-align:center;'>👨‍💻 Developed by <b>Tushar Sinha</b> | MSc Data Science, University of Milan 🇮🇹</p>",
     unsafe_allow_html=True,
 )

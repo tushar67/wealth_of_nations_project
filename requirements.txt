@@ -1,11 +1,10 @@
+streamlit
 pandas
 numpy
 plotly
-streamlit
-wbdata
-requests
-scipy
-statsmodels
-statsmodels
-sklearn
+country_converter
 scikit-learn
+scipy
+gtts
+fpdf==1.7.2
+kaleido==0.2.1

@@ -34,13 +34,11 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# 📊 LOAD DATA (correct relative path for your structure)
+# 📊 LOAD DATA
 # ---------------------------------------------------------
 @st.cache_data
 def load_data():
     time.sleep(1)
-
-    # One directory up (..), then go to output/final_dataset.csv
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DATA_PATH = os.path.join(BASE_DIR, "..", "output", "final_dataset.csv")
 
@@ -60,55 +58,22 @@ with st.spinner("📡 Fetching and preparing global data..."):
 st.success("✅ Data loaded successfully and ready to explore!")
 
 # ---------------------------------------------------------
-# 🌐 REGION FIX USING country_converter
+# ❌ REMOVED: Region creation and filtering
 # ---------------------------------------------------------
-cc = coco.CountryConverter()
-
-def get_region(country_name):
-    try:
-        region = cc.convert(country_name, to='continent')
-        if isinstance(region, list):
-            region = region[0] if region else "Other"
-        if region == "Oceania": return "Australia"
-        if country_name in ["Russia", "Russian Federation"]: return "Asia"
-        if country_name in ["Turkey", "Georgia", "Kazakhstan"]: return "Europe"
-        if country_name in ["United States", "Canada", "Mexico"]: return "North America"
-        if country_name in [
-            "Brazil", "Argentina", "Chile", "Colombia", "Peru", "Ecuador",
-            "Venezuela", "Paraguay", "Uruguay", "Bolivia"
-        ]: return "South America"
-        if country_name in ["Egypt", "Morocco", "Tunisia"]: return "Africa"
-        return region
-    except:
-        return None
-
-if "Region" not in df.columns or df["Region"].isnull().all():
-    df["Region"] = df["Country"].apply(get_region)
-
-df = df[df["Region"].notna()]
-df = df[~df["Region"].str.lower().isin(["america", "other", "none", "not found", "nan"])]
-
-region_colors = {
-    "Africa": "#2ca02c",
-    "Asia": "#ff7f0e",
-    "Europe": "#1f77b4",
-    "North America": "#9467bd",
-    "South America": "#d62728",
-    "Australia": "#17becf",
-}
+# No region columns, no region converter, no region dropdown
 
 # ---------------------------------------------------------
-# 🧭 SIDEBAR FILTERS
+# 🧭 SIDEBAR FILTERS (No Region Now)
 # ---------------------------------------------------------
 st.sidebar.markdown("### 🌍 Global Dashboard Filters")
 
 years = sorted(df["Year"].unique())
-regions = sorted(df["Region"].dropna().unique())
 selected_year = st.sidebar.selectbox("Select Year", years, index=len(years) - 1)
-selected_region = st.sidebar.selectbox("Select Region", ["All"] + list(regions))
 
-x_axis = st.sidebar.selectbox("Select X-Axis Metric", ["GDP_per_capita", "Health_Exp_per_Capita", "Child_Mortality"])
-y_axis = st.sidebar.selectbox("Select Y-Axis Metric", ["Life_Expectancy", "Child_Mortality", "Health_Exp_per_Capita"])
+x_axis = st.sidebar.selectbox("Select X-Axis Metric", 
+    ["GDP_per_capita", "Health_Exp_per_Capita", "Child_Mortality"])
+y_axis = st.sidebar.selectbox("Select Y-Axis Metric", 
+    ["Life_Expectancy", "Child_Mortality", "Health_Exp_per_Capita"])
 
 min_gdp, max_gdp = st.sidebar.slider(
     "Select GDP per Capita Range ($)",
@@ -120,8 +85,6 @@ min_gdp, max_gdp = st.sidebar.slider(
 top_n = st.sidebar.slider("Show Top N Countries (by GDP)", 5, 50, 20)
 
 filtered = df[df["Year"] == selected_year]
-if selected_region != "All":
-    filtered = filtered[filtered["Region"] == selected_region]
 filtered = filtered[
     (filtered["GDP_per_capita"] >= min_gdp) &
     (filtered["GDP_per_capita"] <= max_gdp)
@@ -136,9 +99,13 @@ st.markdown("## 🏁 Compare Two Countries")
 
 col1, col2 = st.columns(2)
 with col1:
-    country1 = st.selectbox("Select First Country", sorted(df["Country"].unique()), index=sorted(df["Country"].unique()).index("India"))
+    country1 = st.selectbox("Select First Country", sorted(df["Country"].unique()), 
+                             index=sorted(df["Country"].unique()).index("India"))
 with col2:
-    country2 = st.selectbox("Select Second Country", sorted(df["Country"].unique()), index=sorted(df["Country"].unique()).index("Italy"))
+    country2 = st.selectbox("Select Second Country", sorted(df["Country"].unique()), 
+                             index=sorted(df["Country"].unique()).index("Italy"))
+
+cc = coco.CountryConverter()
 
 def get_flag_url(country):
     base = "https://flagsapi.com"
@@ -161,7 +128,7 @@ if country1 and country2:
     with ccol1:
         if flag1:
             st.image(flag1, width=70)
-        st.markdown(f"### 🇮🇳 **{country1}**")
+        st.markdown(f"### {country1}")
         st.metric("💰 GDP per Capita", f"${c1_data.iloc[-1]['GDP_per_capita']:,.0f}")
         st.metric("❤️ Life Expectancy", f"{c1_data.iloc[-1]['Life_Expectancy']:.1f} yrs")
         st.metric("💊 Health Exp.", f"${c1_data.iloc[-1]['Health_Exp_per_Capita']:,.0f}")
@@ -170,14 +137,14 @@ if country1 and country2:
     with ccol2:
         if flag2:
             st.image(flag2, width=70)
-        st.markdown(f"### 🇮🇹 **{country2}**")
+        st.markdown(f"### {country2}")
         st.metric("💰 GDP per Capita", f"${c2_data.iloc[-1]['GDP_per_capita']:,.0f}")
         st.metric("❤️ Life Expectancy", f"{c2_data.iloc[-1]['Life_Expectancy']:.1f} yrs")
         st.metric("💊 Health Exp.", f"${c2_data.iloc[-1]['Health_Exp_per_Capita']:,.0f}")
         st.metric("👶 Child Mortality", f"{c2_data.iloc[-1]['Child_Mortality']:.1f} / 1k")
 
     # -----------------------------------------------------
-    # 📈 Animated Life Expectancy vs GDP
+    # 📈 Animated Chart
     # -----------------------------------------------------
     st.markdown("### 📈 Animated Life Expectancy vs GDP")
     comp_data = pd.concat([c1_data, c2_data])
@@ -199,4 +166,5 @@ if country1 and country2:
 # 🧾 FOOTER
 # ---------------------------------------------------------
 st.markdown("---")
-st.markdown("<p style='text-align:center;'>👨‍💻 Developed by <b>Tushar Sinha</b> | MSc Data Science, University of Milan 🇮🇹</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;'>👨‍💻 Developed by <b>Tushar Sinha</b> | MSc Data Science, University of Milan 🇮🇹</p>", 
+            unsafe_allow_html=True)

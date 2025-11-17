@@ -12,9 +12,9 @@ import streamlit as st
 # ---------------------------------------------------------
 st.set_page_config(page_title="🎤 AI Insight Assistant — The Wealth of Nations", layout="wide")
 
-st.title("🎤 AI Insight Assistant — The Wealth of Nations")
+st.title(" AI Insight Assistant — The Wealth of Nations")
 st.markdown("""
-Chat with your data — explore global prosperity trends through **natural-language or voice input**.  
+Chat with your data — explore global prosperity trends using **natural language or voice input**.  
 Just click the 🎙️ button and ask your question aloud!
 
 **Examples:**
@@ -37,6 +37,7 @@ def load_data():
     df = pd.read_csv(data_path)
     cc = coco.CountryConverter()
 
+    # Add region
     if "Region" not in df.columns:
         def get_region(c):
             try:
@@ -52,6 +53,7 @@ def load_data():
     df = df[df["Region"].notna()]
     df = df[~df["Region"].isin(["America", "Not Found", "Other"])]
 
+    # Fix numeric
     for col in ["GDP_per_capita", "Life_Expectancy", "Health_Exp_per_Capita", "Child_Mortality"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
@@ -59,12 +61,22 @@ def load_data():
 
 df = load_data()
 
+regions = sorted(df["Region"].astype(str).unique())
+
 # ---------------------------------------------------------
-# 🧠 SIDEBAR INPUTS
+# 🧠 AUTOMATIC METRIC DETECTION
 # ---------------------------------------------------------
-st.sidebar.header("⚙️ Assistant Controls")
-metrics = ["GDP_per_capita", "Life_Expectancy", "Health_Exp_per_Capita", "Child_Mortality"]
-selected_metric = st.sidebar.selectbox("📊 Choose a Metric", metrics)
+def detect_metric(query):
+    q = query.lower()
+    if "life" in q or "expectancy" in q:
+        return "Life_Expectancy"
+    if "gdp" in q:
+        return "GDP_per_capita"
+    if "health" in q or "expenditure" in q:
+        return "Health_Exp_per_Capita"
+    if "child" in q or "mortality" in q:
+        return "Child_Mortality"
+    return None
 
 # ---------------------------------------------------------
 # 🎤 VOICE INPUT
@@ -97,23 +109,29 @@ query = st.sidebar.text_area(
 # ---------------------------------------------------------
 # 🔍 PROCESS QUERY
 # ---------------------------------------------------------
-regions = sorted(df["Region"].astype(str).unique())
-
 def get_latest_value(region, metric):
-    temp = df[df["Region"] == region]
-    if temp.empty:
+    t = df[df["Region"] == region]
+    if t.empty:
         return None
-    return temp.loc[temp["Year"].idxmax(), metric]
+    return t.loc[t["Year"].idxmax(), metric]
+
 
 if query:
     query_lower = query.lower()
+
+    # detect metric
+    metric = detect_metric(query)
+    if not metric:
+        st.warning("⚠️ Please mention a metric like **GDP**, **life expectancy**, **health expenditure**, or **child mortality**.")
+        st.stop()
+
     found_regions = [r for r in regions if r.lower() in query_lower]
 
     # --- Compare two regions ---
     if len(found_regions) >= 2:
         r1, r2 = found_regions[:2]
-        v1 = get_latest_value(r1, selected_metric)
-        v2 = get_latest_value(r2, selected_metric)
+        v1 = get_latest_value(r1, metric)
+        v2 = get_latest_value(r2, metric)
 
         if v1 is None or v2 is None:
             st.error(f"⚠️ Data not available for {r1} or {r2}.")
@@ -122,30 +140,21 @@ if query:
             pct = (diff / v1) * 100 if v1 else 0
             better = r2 if v2 > v1 else r1
 
-            st.markdown(f"### 🧭 {selected_metric.replace('_', ' ')} Comparison: {r1} vs {r2}")
-            st.write(f"**{better}** has higher {selected_metric.replace('_', ' ')} by **{abs(pct):.2f}%**")
+            st.markdown(f"### 🧭 {metric.replace('_', ' ')} Comparison: {r1} vs {r2}")
+            st.write(f"**{better}** has higher {metric.replace('_', ' ')} by **{abs(pct):.2f}%**")
 
-            comp_df = pd.DataFrame({"Region": [r1, r2], selected_metric: [v1, v2]})
-            fig = px.bar(comp_df, x="Region", y=selected_metric, color="Region",
-                         text=selected_metric, title=f"{r1} vs {r2}")
+            comp_df = pd.DataFrame({"Region": [r1, r2], metric: [v1, v2]})
+            fig = px.bar(comp_df, x="Region", y=metric, color="Region",
+                         text=metric, title=f"{r1} vs {r2}")
             fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
             st.plotly_chart(fig, use_container_width=True)
 
-    # --- Single region query ---
+    # --- Single region ---
     elif len(found_regions) == 1:
         region = found_regions[0]
-        region_df = df[df["Region"] == region].groupby("Year")[metrics].mean().reset_index()
-
-        if "life" in query_lower:
-            metric = "Life_Expectancy"
-        elif "gdp" in query_lower:
-            metric = "GDP_per_capita"
-        elif "health" in query_lower:
-            metric = "Health_Exp_per_Capita"
-        elif "child" in query_lower or "mortality" in query_lower:
-            metric = "Child_Mortality"
-        else:
-            metric = selected_metric
+        region_df = df[df["Region"] == region].groupby("Year")[
+            ["GDP_per_capita", "Life_Expectancy", "Health_Exp_per_Capita", "Child_Mortality"]
+        ].mean().reset_index()
 
         latest = region_df.iloc[-1][metric]
         first = region_df.iloc[0][metric]
@@ -153,6 +162,7 @@ if query:
 
         st.markdown(f"### 🧠 Insight for {region}")
         st.write(f"{metric.replace('_', ' ')} has {trend} from {first:.2f} to {latest:.2f}.")
+
         fig = px.line(region_df, x="Year", y=metric, markers=True,
                       title=f"{metric.replace('_', ' ')} Trend in {region}")
         st.plotly_chart(fig, use_container_width=True)
@@ -166,4 +176,4 @@ else:
 # 🧭 FOOTER
 # ---------------------------------------------------------
 st.markdown("---")
-st.markdown("<p style='text-align:center;'>🎤 Developed by <b>Tushar Sinha</b> | Vishwakarma Enterprises 🇮🇹</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;'>👨‍💻 Developed by <b>Tushar Sinha</b> | MSc Data Science, University of Milan 🇮🇹</p>", unsafe_allow_html=True)

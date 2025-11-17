@@ -1,13 +1,15 @@
 import os
 import tempfile
 
-import country_converter as coco
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from gtts import gTTS  # 🎤 Text-to-Speech
+from gtts import gTTS
 from scipy.stats import pearsonr
+
+from utils.continent_mapper import \
+    apply_continent_mapping  # ✔️ Use shared mapper
 
 # ---------------------------------------------------------
 # 🌍 PAGE CONFIG
@@ -18,11 +20,11 @@ st.title("📊 Global Correlations — The Wealth of Nations")
 st.markdown("""
 Explore the relationships between key economic and health indicators across the world.  
 Use filters to analyze trends by region, year, or globally.  
-Now featuring **🎤 AI Narration** for insights!
+Now featuring ** Narration** for insights!
 """)
 
 # ---------------------------------------------------------
-# 📁 LOAD DATA
+# 📁 LOAD DATA (using NEW shared mapping)
 # ---------------------------------------------------------
 @st.cache_data
 def load_data():
@@ -35,26 +37,13 @@ def load_data():
         st.stop()
 
     df = pd.read_csv(data_path)
-    cc = coco.CountryConverter()
 
-    def get_region(country):
-        try:
-            region = cc.convert(country, to='continent')
-            if region == "Oceania": return "Australia"
-            if country in ["Russia", "Russian Federation"]: return "Asia"
-            return region
-        except:
-            return None
+    # ✔️ Apply the shared 7-continent mapping 
+    df = apply_continent_mapping(df)
 
-    if "Region" not in df.columns:
-        df["Region"] = df["Country"].apply(get_region)
-
-    df["Region"] = df["Region"].apply(lambda x: x[0] if isinstance(x, list) else x)
-    df = df[df["Region"].notna()]
-    df = df[~df["Region"].isin(["America", "Not Found", "Other"])]
-
-    num_cols = ["GDP_per_capita", "Life_Expectancy", "Health_Exp_per_Capita", "Child_Mortality"]
-    for col in num_cols:
+    # Convert numeric fields
+    numeric_cols = ["GDP_per_capita", "Life_Expectancy", "Health_Exp_per_Capita", "Child_Mortality"]
+    for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
     return df
@@ -71,8 +60,7 @@ st.sidebar.header("🔍 Filters")
 years = sorted(df["Year"].unique())
 selected_year = st.sidebar.selectbox("📅 Select Year", years, index=len(years) - 1)
 
-df["Region"] = df["Region"].astype(str)
-regions = ["All"] + sorted(df["Region"].unique())
+regions = ["All"] + sorted(df["Region"].unique())      # ✔️ Now correct!
 selected_region = st.sidebar.selectbox("🌍 Select Region", regions)
 
 x_metric = st.sidebar.selectbox(
@@ -80,6 +68,7 @@ x_metric = st.sidebar.selectbox(
     ["GDP_per_capita", "Life_Expectancy", "Health_Exp_per_Capita", "Child_Mortality"],
     index=0,
 )
+
 y_metric = st.sidebar.selectbox(
     "Y-axis Metric",
     ["Life_Expectancy", "Child_Mortality", "Health_Exp_per_Capita", "GDP_per_capita"],
@@ -87,24 +76,25 @@ y_metric = st.sidebar.selectbox(
 )
 
 # ---------------------------------------------------------
-# 🔎 FILTER & CLEAN DATA
+# 🔎 FILTERING
 # ---------------------------------------------------------
-filtered = df[df["Year"] == selected_year]
+filtered = df[df["Year"] == selected_year].copy()
+
 if selected_region != "All":
     filtered = filtered[filtered["Region"] == selected_region]
 
 filtered = filtered.dropna(subset=[x_metric, y_metric])
 filtered["Health_Exp_per_Capita"] = filtered["Health_Exp_per_Capita"].fillna(1)
 
-# ---------------------------------------------------------
-# 📈 CORRELATION ANALYSIS
-# ---------------------------------------------------------
-if not filtered.empty:
-    corr, _ = pearsonr(filtered[x_metric], filtered[y_metric])
-    st.metric(label="📈 Pearson Correlation", value=f"{corr:.2f}")
-else:
+if filtered.empty:
     st.warning("⚠️ No data available for the selected filters.")
     st.stop()
+
+# ---------------------------------------------------------
+# 📈 CORRELATION
+# ---------------------------------------------------------
+corr, _ = pearsonr(filtered[x_metric], filtered[y_metric])
+st.metric(label="📈 Pearson Correlation", value=f"{corr:.2f}")
 
 # ---------------------------------------------------------
 # 🟢 SCATTER PLOT
@@ -123,7 +113,7 @@ fig = px.scatter(
 st.plotly_chart(fig, use_container_width=True)
 
 # ---------------------------------------------------------
-# 📋 DATA SUMMARY
+# 📋 SUMMARY TABLE
 # ---------------------------------------------------------
 st.subheader("📋 Data Summary")
 st.dataframe(
@@ -133,52 +123,34 @@ st.dataframe(
 )
 
 # ---------------------------------------------------------
-# 🧠 AI NARRATIVE INSIGHT
+# 🧠 AI NARRATIVE
 # ---------------------------------------------------------
 st.subheader("🧠 AI Correlation Insight")
 
 def generate_ai_insight(region, year, x_metric, y_metric, corr):
     x_name = x_metric.replace("_", " ").title()
     y_name = y_metric.replace("_", " ").title()
-    abs_corr = abs(corr)
 
-    # Correlation strength
-    if abs_corr >= 0.7:
+    if abs(corr) >= 0.7:
         strength = "a strong relationship"
-    elif abs_corr >= 0.4:
+    elif abs(corr) >= 0.4:
         strength = "a moderate connection"
     else:
         strength = "a weak correlation"
 
-    # Direction
     if corr > 0:
         direction = f"As {x_name} increases, {y_name} tends to rise."
     else:
         direction = f"As {x_name} increases, {y_name} tends to decrease."
 
-    # Context
-    if "Child_Mortality" in [x_metric, y_metric] and corr < 0:
-        context = "This typically reflects how rising income and better healthcare reduce child mortality rates."
-    elif "Life_Expectancy" in [x_metric, y_metric] and corr > 0:
-        context = "This indicates that wealthier nations tend to enjoy longer, healthier lives."
-    elif "Health_Exp_per_Capita" in [x_metric, y_metric]:
-        context = "It highlights the close link between healthcare investment and economic strength."
-    else:
-        context = "This reflects broader social and economic patterns."
-
     emoji = "📈" if corr > 0 else "📉"
-
-    summary = (
-        f"{emoji} In {region} during {year}, there is {strength} between {x_name} and {y_name} "
-        f"(correlation = {corr:.2f}). {direction} {context}"
-    )
-    return summary
+    return f"{emoji} In {region} during {year}, there is {strength} between {x_name} and {y_name} (corr = {corr:.2f}). {direction}"
 
 ai_text = generate_ai_insight(selected_region, selected_year, x_metric, y_metric, corr)
 st.info(ai_text)
 
 # ---------------------------------------------------------
-# 🔊 VOICE OUTPUT (Text-to-Speech)
+# 🔊 TEXT-TO-SPEECH
 # ---------------------------------------------------------
 if st.button("🔊 Speak Insight"):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
@@ -190,7 +162,4 @@ if st.button("🔊 Speak Insight"):
 # 🧭 FOOTER
 # ---------------------------------------------------------
 st.markdown("---")
-st.markdown(
-    "<p style='text-align:center;'>🌍 Developed by <b>Tushar Sinha</b> | University of Milan 🇮🇹</p>",
-    unsafe_allow_html=True,
-)
+st.markdown("<p style='text-align:center;'>👨‍💻 Developed by <b>Tushar Sinha</b> | MSc Data Science, University of Milan 🇮🇹</p>", unsafe_allow_html=True)
